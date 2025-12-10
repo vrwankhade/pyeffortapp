@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team Effort Tracker</title>
+  <style>
+    :root {
+      --bg: #0e0e0e;
+      --panel: #1c1c1c;
+      --text: #f5f5f5;
+      --muted: #cfcfcf;
+      --accent: #f7a24f;
+      --accent-soft: #f7b97b;
+      --border: #3a3a3a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      padding: 14px 20px;
+      background: linear-gradient(90deg, rgba(247,162,79,0.15), rgba(247,185,123,0.05));
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 { margin: 0; font-size: 20px; letter-spacing: 0.5px; }
+    .layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      height: calc(100vh - 64px);
+    }
+    .left, .right {
+      padding: 16px;
+      overflow-y: auto;
+      background: var(--panel);
+    }
+    .left { border-right: 1px solid var(--border); }
+    .section-title {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+    }
+    .member-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .member-item {
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      margin-bottom: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #141414;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: border 0.2s, transform 0.1s;
+    }
+    .member-item:hover { border-color: var(--accent); transform: translateY(-1px); }
+    .member-item.active { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(247,162,79,0.4); }
+    .pill {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      background: rgba(247,162,79,0.15);
+      color: var(--accent);
+      border: 1px solid rgba(247,162,79,0.4);
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      background: #141414;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 8px;
+      text-align: left;
+      font-size: 13px;
+    }
+    th { background: rgba(247,162,79,0.1); color: var(--accent); }
+    button, select, input, textarea {
+      background: #111;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 13px;
+    }
+    button.primary { background: var(--accent); color: #000; border-color: var(--accent); cursor: pointer; }
+    button.secondary { background: #222; cursor: pointer; }
+    button + button { margin-left: 8px; }
+    form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 4px; }
+    textarea { resize: vertical; min-height: 60px; }
+    .actions { margin-top: 8px; }
+    .badge {
+      display: inline-block;
+      margin-right: 4px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: rgba(247,185,123,0.2);
+      color: var(--accent);
+      font-size: 11px;
+    }
+    .grid-two { display: grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap: 12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Team Effort Tracker</h1>
+    <div>
+      <label for="actorSelect">Acting as:</label>
+      <select id="actorSelect"></select>
+    </div>
+  </header>
+
+  <div class="layout">
+    <section class="left">
+      <p class="section-title">Team Members</p>
+      <ul id="memberList" class="member-list"></ul>
+    </section>
+
+    <section class="right">
+      <div class="info-grid">
+        <div class="card">
+          <h2 id="teamName">Team</h2>
+          <p id="memberName" style="font-size:18px;margin:4px 0 6px 0;">Select a teammate</p>
+          <p id="careerLevel" class="pill">Career level</p>
+          <p id="nowTime" style="color:var(--muted);font-size:12px;">—</p>
+        </div>
+        <div class="card" id="leadPanel" style="display:none;">
+          <p class="section-title">Team Lead Controls</p>
+          <div class="grid-two">
+            <div>
+              <label>Create member</label>
+              <input id="newMemberName" placeholder="Name">
+              <input id="newMemberLevel" placeholder="Career level">
+              <label style="margin-top:6px;display:block;">
+                <input type="checkbox" id="newMemberLead"> Lead
+              </label>
+              <button class="primary" id="createMemberBtn">Save member</button>
+            </div>
+            <div>
+              <label>Reports</label>
+              <div class="actions">
+                <button id="weeklyReport" class="secondary">Weekly CSV</button>
+                <button id="monthlyReport" class="secondary">Monthly CSV</button>
+                <button id="semesterReport" class="secondary">Semester CSV</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <h3 style="margin:0;">Tasks</h3>
+          <button class="primary" id="showFormBtn">Add Task</button>
+        </div>
+        <div id="taskForm" style="display:none; margin-top:12px;">
+          <form id="taskFormElement">
+            <div>
+              <label>Task Name</label>
+              <input name="title" required>
+            </div>
+            <div>
+              <label>Task Details</label>
+              <textarea name="details"></textarea>
+            </div>
+            <div>
+              <label>No. of hours</label>
+              <input name="hours_spent" type="number" min="0" step="0.25">
+            </div>
+            <div>
+              <label>Due date</label>
+              <input name="due_date" type="date">
+            </div>
+            <div>
+              <label>Blockers</label>
+              <textarea name="blockers"></textarea>
+            </div>
+            <div>
+              <label>Comments</label>
+              <textarea name="comments"></textarea>
+            </div>
+            <div id="assigneeField">
+              <label>Assign to</label>
+              <select name="assignee_id" id="assigneeSelect"></select>
+            </div>
+            <div>
+              <label>Tag teammates for help</label>
+              <select name="tags" id="tagSelect" multiple size="4"></select>
+            </div>
+          </form>
+          <div class="actions">
+            <button class="secondary" id="resetFormBtn">Reset</button>
+            <button class="primary" id="saveTaskBtn">Save</button>
+          </div>
+        </div>
+
+        <table id="taskTable">
+          <thead>
+            <tr>
+              <th>Sr.</th>
+              <th>Task Name</th>
+              <th>Details</th>
+              <th>Hours</th>
+              <th>Due</th>
+              <th>Status</th>
+              <th>Blockers</th>
+              <th>Comments</th>
+              <th>Tags</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const memberListEl = document.getElementById('memberList');
+    const actorSelect = document.getElementById('actorSelect');
+    const teamNameEl = document.getElementById('teamName');
+    const memberNameEl = document.getElementById('memberName');
+    const careerLevelEl = document.getElementById('careerLevel');
+    const nowTimeEl = document.getElementById('nowTime');
+    const taskTableBody = document.querySelector('#taskTable tbody');
+    const showFormBtn = document.getElementById('showFormBtn');
+    const taskFormContainer = document.getElementById('taskForm');
+    const taskFormElement = document.getElementById('taskFormElement');
+    const resetFormBtn = document.getElementById('resetFormBtn');
+    const saveTaskBtn = document.getElementById('saveTaskBtn');
+    const assigneeField = document.getElementById('assigneeField');
+    const assigneeSelect = document.getElementById('assigneeSelect');
+    const tagSelect = document.getElementById('tagSelect');
+    const leadPanel = document.getElementById('leadPanel');
+    const createMemberBtn = document.getElementById('createMemberBtn');
+    const newMemberName = document.getElementById('newMemberName');
+    const newMemberLevel = document.getElementById('newMemberLevel');
+    const newMemberLead = document.getElementById('newMemberLead');
+    const reportButtons = {
+      weekly: document.getElementById('weeklyReport'),
+      monthly: document.getElementById('monthlyReport'),
+      semester: document.getElementById('semesterReport')
+    };
+
+    let members = [];
+    let activeMember = null;
+
+    function tickClock() {
+      const now = new Date();
+      nowTimeEl.textContent = now.toLocaleString();
+    }
+    setInterval(tickClock, 1000);
+    tickClock();
+
+    async function fetchJSON(url, options = {}) {
+      const actorId = actorSelect.value;
+      const headers = Object.assign({'Content-Type': 'application/json'}, options.headers || {});
+      if (actorId) headers['X-Actor-Id'] = actorId;
+      const res = await fetch(url, {...options, headers});
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || res.statusText);
+      }
+      return res.json();
+    }
+
+    function renderMembers() {
+      memberListEl.innerHTML = '';
+      members.forEach(m => {
+        const li = document.createElement('li');
+        li.className = 'member-item' + (activeMember && activeMember.id === m.id ? ' active' : '');
+        li.innerHTML = `<span>${m.name}</span><span class="pill">${m.career_level}${m.is_lead ? ' • Lead' : ''}</span>`;
+        li.onclick = () => selectMember(m.id);
+        memberListEl.appendChild(li);
+      });
+      // Populate selects
+      assigneeSelect.innerHTML = members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+      tagSelect.innerHTML = members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+    }
+
+    async function loadMembers() {
+      members = await fetchJSON('/api/members');
+      actorSelect.innerHTML = members.map(m => `<option value="${m.id}">${m.name}${m.is_lead ? ' (Lead)' : ''}</option>`).join('');
+      if (!activeMember && members.length) {
+        activeMember = members[0];
+      } else if (activeMember) {
+        activeMember = members.find(m => m.id === activeMember.id) || members[0];
+      }
+      actorSelect.value = activeMember?.id || '';
+      renderMembers();
+      updateHeader();
+      loadTasks();
+      toggleLeadPanel();
+    }
+
+    function toggleLeadPanel() {
+      const actor = members.find(m => m.id == actorSelect.value);
+      leadPanel.style.display = actor && actor.is_lead ? 'block' : 'none';
+      assigneeField.style.display = actor && actor.is_lead ? 'block' : 'none';
+    }
+
+    function updateHeader() {
+      if (!activeMember) return;
+      teamNameEl.textContent = 'Team';
+      memberNameEl.textContent = activeMember.name;
+      careerLevelEl.textContent = activeMember.career_level + (activeMember.is_lead ? ' • Lead' : '');
+    }
+
+    async function loadTasks() {
+      if (!activeMember) return;
+      const tasks = await fetchJSON(`/api/tasks?member_id=${activeMember.id}`);
+      taskTableBody.innerHTML = '';
+      tasks.forEach((t, idx) => {
+        const tr = document.createElement('tr');
+        const tags = (t.tags || []).map(id => {
+          const m = members.find(mem => mem.id === id);
+          return `<span class="badge">${m ? m.name : id}</span>`;
+        }).join('');
+        tr.innerHTML = `
+          <td>${idx + 1}</td>
+          <td>${t.title}</td>
+          <td>${t.details || ''}</td>
+          <td>${t.hours_spent ?? ''}</td>
+          <td>${t.due_date || ''}</td>
+          <td>${t.status}</td>
+          <td>${t.blockers || ''}</td>
+          <td>${t.comments || ''}</td>
+          <td>${tags}</td>
+        `;
+        taskTableBody.appendChild(tr);
+      });
+    }
+
+    function selectMember(id) {
+      activeMember = members.find(m => m.id === id);
+      updateHeader();
+      renderMembers();
+      loadTasks();
+    }
+
+    showFormBtn.onclick = () => {
+      taskFormContainer.style.display = taskFormContainer.style.display === 'none' ? 'block' : 'none';
+    };
+    resetFormBtn.onclick = () => taskFormElement.reset();
+
+    saveTaskBtn.onclick = async () => {
+      const formData = new FormData(taskFormElement);
+      const payload = {
+        title: formData.get('title'),
+        details: formData.get('details') || null,
+        hours_spent: formData.get('hours_spent') ? parseFloat(formData.get('hours_spent')) : null,
+        due_date: formData.get('due_date') || null,
+        blockers: formData.get('blockers') || null,
+        comments: formData.get('comments') || null,
+        assignee_id: formData.get('assignee_id') || null,
+        tags: Array.from(tagSelect.selectedOptions).map(o => parseInt(o.value)),
+        status: 'in_progress'
+      };
+      try {
+        await fetchJSON('/api/tasks', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        taskFormElement.reset();
+        taskFormContainer.style.display = 'none';
+        await loadTasks();
+      } catch (err) {
+        alert('Error saving task: ' + err.message);
+      }
+    };
+
+    actorSelect.onchange = () => {
+      toggleLeadPanel();
+      loadTasks();
+    };
+
+    createMemberBtn.onclick = async () => {
+      const payload = {
+        name: newMemberName.value,
+        career_level: newMemberLevel.value || 'Team Member',
+        is_lead: newMemberLead.checked
+      };
+      try {
+        await fetchJSON('/api/members', { method: 'POST', body: JSON.stringify(payload) });
+        newMemberName.value = '';
+        newMemberLevel.value = '';
+        newMemberLead.checked = false;
+        await loadMembers();
+      } catch (err) {
+        alert('Error creating member: ' + err.message);
+      }
+    };
+
+    Object.entries(reportButtons).forEach(([period, btn]) => {
+      btn.onclick = () => {
+        const actorId = actorSelect.value;
+        if (!actorId) return;
+        const url = `/api/reports?period=${period}&format=csv`;
+        fetch(url, { headers: { 'X-Actor-Id': actorId } })
+          .then(res => res.blob())
+          .then(blob => {
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `report_${period}.csv`;
+            link.click();
+          });
+      };
+    });
+
+    loadMembers();
+  </script>
+</body>
+</html>
+
