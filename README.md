@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Team Effort Tracker (FastAPI + Oracle)
 
 A lightweight web app to track individual tasks, assignment, tagging for assistance, and lead-level reporting (weekly/monthly/semester). Oracle is the primary database, wired via SQLAlchemy + cx_Oracle.
@@ -50,3 +51,6 @@ uvicorn backend.main:app --reload
 - Enhance reporting (status filters, pivoted summaries).
 - Add validation and input masks for hours/dates.
 
+=======
+# pyeffortapp
+>>>>>>> 7d1970507efcf7287cd896042b48f2eba08506b1
