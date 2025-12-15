@@ -1067,7 +1067,18 @@
           method: 'PUT',
           body: JSON.stringify(payload)
         });
+        // reload teams in case team names or ordering changed, then reload members
+        await loadTeams();
         await loadMembers();
+        // if we updated the currently-logged-in user, refresh local currentUser object so header/profile reflect team change
+        if (currentUser && currentUser.id === memberId) {
+          const updated = members.find(m => m.id === memberId);
+          if (updated) {
+            currentUser = updated;
+            localStorage.setItem('currentMember', JSON.stringify(currentUser));
+            updateHeaderDisplay();
+          }
+        }
         renderEditMembersModal();
       } catch (err) {
         alert('Error updating member: ' + err.message);
