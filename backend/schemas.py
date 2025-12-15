@@ -37,6 +37,7 @@ class Member(MemberBase):
     id: int
     created_at: datetime
     is_locked: bool = False
+    team_name: Optional[str] = None
 
     class Config:
         from_attributes = True

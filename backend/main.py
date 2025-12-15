@@ -77,14 +77,14 @@ def startup_event():
                 password_hash=security.hash_password("changeme"),
                 name="Bailey Dev",
                 career_level="Senior",
-                team_id=teams["DevOPS"].id,
+                team_id=teams["OPS"].id,
             )
             member_b = models.Member(
                 username="casey.analyst",
                 password_hash=security.hash_password("changeme"),
                 name="Casey Analyst",
                 career_level="Associate",
-                team_id=teams["Infra"].id,
+                team_id=teams["OPS"].id,
             )
             db.add_all([lead, member_a, member_b])
             db.flush()
@@ -99,6 +99,12 @@ def startup_event():
             )
             db.add(sample_task)
             db.commit()
+        else:
+            # If teams already exist, for this change we want all existing members placed into OPS team
+            ops = db.query(models.Team).filter(models.Team.name == 'OPS').first()
+            if ops:
+                db.query(models.Member).update({models.Member.team_id: ops.id})
+                db.commit()
 
 
 @app.get("/", response_class=FileResponse)

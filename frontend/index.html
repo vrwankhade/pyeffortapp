@@ -534,6 +534,10 @@
           <div class="profile-info-value" id="profileCareerLevel">—</div>
         </div>
         <div class="profile-info-item">
+          <div class="profile-info-label">Team</div>
+          <div class="profile-info-value" id="profileTeam">—</div>
+        </div>
+        <div class="profile-info-item">
           <div class="profile-info-label">Role</div>
           <div class="profile-info-value" id="profileRole">—</div>
         </div>
@@ -897,6 +901,9 @@
       profileName.textContent = currentUser.name;
       profileUsername.textContent = `@${currentUser.username}`;
       profileCareerLevel.textContent = currentUser.career_level || '—';
+      // show team for everyone in profile
+      const teamTxt = currentUser.team_name ? `Team: ${currentUser.team_name}` : `Team: —`;
+      profileTeam.textContent = teamTxt;
       profileRole.textContent = currentUser.is_lead ? 'Team Lead' : 'Team Member';
       profileCreatedAt.textContent = new Date(currentUser.created_at).toLocaleDateString();
       closeUserMenu();
@@ -1132,7 +1139,7 @@ function deleteTask(id) {
         const teamClass = (currentUser && currentUser.is_lead && m.team_id) ? ` team-${String(m.team_id)}` : '';
         li.className = 'member-item' + (activeMember && activeMember.id === m.id ? ' active' : '') + teamClass;
         // if current user is a lead, show team name next to career level
-        const teamText = (currentUser && currentUser.is_lead && m.team_name) ? ` • ${m.team_name}` : '';
+        const teamText = m.team_name ? ` • ${m.team_name}` : '';
         const teamSlug = m.team_name ? (' team-' + (m.team_name || '').toLowerCase().replace(/[^a-z0-9]+/g,'-')) : '';
         li.className += teamSlug;
         li.innerHTML = `<span>${m.name}</span><span class="pill">${m.career_level}${m.is_lead ? ' • Lead' : ''}${teamText}</span>`;
@@ -1282,7 +1289,7 @@ function deleteTask(id) {
         name: newMemberName.value,
         career_level: newMemberLevel.value || 'Team Member',
         is_lead: newMemberLead.checked,
-        team_id: newMemberTeam && newMemberTeam.value ? parseInt(newMemberTeam.value) : null,
+        team_id: (newMemberTeam && newMemberTeam.value) ? parseInt(newMemberTeam.value) : (teams && teams.length ? teams[0].id : null),
       };
       try {
         await fetchJSON('/api/auth/users', { method: 'POST', body: JSON.stringify(payload) });
