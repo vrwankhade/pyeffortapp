@@ -1185,6 +1185,18 @@ function deleteTask(id) {
       } catch (e) {
         teams = [];
       }
+      // sort teams so the preferred standard names appear first in this order
+      const preferred = ['OPS','DevOPS','Infra'];
+      teams = teams.sort((a,b) => {
+        const ai = preferred.indexOf(a.name);
+        const bi = preferred.indexOf(b.name);
+        if (ai !== -1 || bi !== -1) {
+          if (ai === -1) return 1;
+          if (bi === -1) return -1;
+          return ai - bi;
+        }
+        return a.name.localeCompare(b.name);
+      });
       const newTeamSelect = document.getElementById('newMemberTeam');
       const editTeamSelect = document.getElementById('editMemberTeam');
       const leadTeamFilter = document.getElementById('leadTeamFilter');

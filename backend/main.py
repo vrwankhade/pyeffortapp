@@ -55,36 +55,43 @@ def get_current_member(
 def startup_event():
     Base.metadata.create_all(bind=engine)
     with next(get_db()) as db:
-        if db.query(models.Team).count() == 0:
-            # create standard teams
-            teams = {}
-            for tname in ("OPS", "DevOPS", "Infra"):
-                tm = models.Team(name=tname)
-                db.add(tm)
+        # Ensure standard teams exist (OPS, DevOPS, Infra). Create any that are missing.
+        standard_names = ("OPS", "DevOPS", "Infra")
+        created_any = False
+        existing = {t.name for t in db.query(models.Team).all()}
+        teams_map = {}
+        for tname in standard_names:
+            team = db.query(models.Team).filter(models.Team.name == tname).first()
+            if not team:
+                team = models.Team(name=tname)
+                db.add(team)
                 db.flush()
-                teams[tname] = tm
-            # seed lead with credentials and assign to OPS by default
+                created_any = True
+            teams_map[tname] = team
+
+        # If the DB was empty before, also seed a lead and sample members and task
+        if db.query(models.Team).count() == len(standard_names) and created_any:
             lead = models.Member(
                 username="alex.lead",
                 password_hash=security.hash_password("changeme"),
                 name="Alex Lead",
                 career_level="Lead",
                 is_lead=True,
-                team_id=teams["OPS"].id,
+                team_id=teams_map["OPS"].id,
             )
             member_a = models.Member(
                 username="bailey.dev",
                 password_hash=security.hash_password("changeme"),
                 name="Bailey Dev",
                 career_level="Senior",
-                team_id=teams["OPS"].id,
+                team_id=teams_map["OPS"].id,
             )
             member_b = models.Member(
                 username="casey.analyst",
                 password_hash=security.hash_password("changeme"),
                 name="Casey Analyst",
                 career_level="Associate",
-                team_id=teams["OPS"].id,
+                team_id=teams_map["OPS"].id,
             )
             db.add_all([lead, member_a, member_b])
             db.flush()
@@ -99,12 +106,12 @@ def startup_event():
             )
             db.add(sample_task)
             db.commit()
-        else:
-            # If teams already exist, for this change we want all existing members placed into OPS team
-            ops = db.query(models.Team).filter(models.Team.name == 'OPS').first()
-            if ops:
-                db.query(models.Member).update({models.Member.team_id: ops.id})
-                db.commit()
+
+        # Ensure all members are currently assigned to OPS (as requested)
+        ops = db.query(models.Team).filter(models.Team.name == 'OPS').first()
+        if ops:
+            db.query(models.Member).update({models.Member.team_id: ops.id})
+            db.commit()
 
 
 @app.get("/", response_class=FileResponse)
