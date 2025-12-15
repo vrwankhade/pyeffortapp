@@ -18,11 +18,15 @@ def build_oracle_url() -> str:
     """
     user = os.getenv("ORACLE_USER", "appuser")
     password = os.getenv("ORACLE_PASSWORD", "app_password")
-    dsn = os.getenv("ORACLE_DSN", "localhost:1521/FREEPDB1")
+    dsn = os.getenv("ORACLE_DSN", "localhost:1521/FREEXDB")
     return f"oracle+cx_oracle://{user}:{password}@{dsn}"
 
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "oracle+cx_oracle://appuser:app_password@localhost:1521/?service_name=freepdb1",
+)
 
-DATABASE_URL = os.getenv("DATABASE_URL", build_oracle_url())
+##DATABASE_URL = os.getenv("DATABASE_URL", build_oracle_url())
 
 engine = create_engine(
     DATABASE_URL,

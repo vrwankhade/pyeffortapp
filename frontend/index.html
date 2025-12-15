@@ -21,6 +21,10 @@
       background: var(--bg);
       color: var(--text);
     }
+    body.logged-out .layout,
+    body.logged-out header {
+      display: none;
+    }
     header {
       padding: 14px 20px;
       background: linear-gradient(90deg, rgba(247,162,79,0.15), rgba(247,185,123,0.05));
@@ -30,6 +34,74 @@
       align-items: center;
     }
     header h1 { margin: 0; font-size: 20px; letter-spacing: 0.5px; }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .user-menu-trigger {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: rgba(247,162,79,0.1);
+      border: 1px solid rgba(247,162,79,0.2);
+      transition: all 0.2s;
+    }
+    .user-menu-trigger:hover {
+      background: rgba(247,162,79,0.2);
+      border-color: rgba(247,162,79,0.4);
+    }
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(247,162,79,0.3), rgba(247,185,123,0.3));
+      border: 2px solid rgba(247,162,79,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+      overflow: hidden;
+    }
+    .user-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .user-menu {
+      position: absolute;
+      top: 60px;
+      right: 20px;
+      background: #111;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      z-index: 100;
+      min-width: 180px;
+      display: none;
+    }
+    .user-menu.active {
+      display: block;
+    }
+    .user-menu-item {
+      padding: 10px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      font-size: 13px;
+      transition: background 0.2s;
+    }
+    .user-menu-item:last-child {
+      border-bottom: none;
+    }
+    .user-menu-item:hover {
+      background: rgba(247,162,79,0.1);
+      color: var(--accent);
+    }
     .layout {
       display: grid;
       grid-template-columns: 280px 1fr;
@@ -129,14 +201,357 @@
       font-size: 11px;
     }
     .grid-two { display: grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap: 12px; }
+
+    /* Small spacing for inputs inside the Team Lead controls; restore fuller textbox look */
+    #leadPanel input,
+    #leadPanel select,
+    #leadPanel textarea {
+      /* keep full-width but use slightly larger padding and margins to match previous appearance */
+      display: block;
+      width: 100%;
+      margin-top: 8px;
+      margin-bottom: 8px;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #141414;
+      color: var(--text);
+    }
+    /* checkbox labels inline and aligned */
+    #leadPanel label.checkbox-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+      margin-bottom: 6px;
+    }
+    /* small spacing for the Save button */
+    #leadPanel .primary { margin-top: 10px; }
+
+    /* Login overlay */
+    #loginOverlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(0,0,0,0.85) 0%, rgba(20,20,20,0.9) 100%);
+      background-image: linear-gradient(135deg, rgba(0,0,0,0.85) 0%, rgba(20,20,20,0.9) 100%), url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(247,162,79,0.1)" stroke-width="1"/></pattern></defs><rect width="1200" height="800" fill="%23000000"/><rect width="1200" height="800" fill="url(%23grid)"/></svg>');
+      background-attachment: fixed;
+      z-index: 10;
+    }
+    #loginOverlay .panel {
+      background: rgba(17,17,17,0.95);
+      border: 2px solid rgba(247,162,79,0.3);
+      border-radius: 10px;
+      padding: 30px;
+      min-width: 320px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 30px rgba(247,162,79,0.1);
+      backdrop-filter: blur(10px);
+    }
+    #loginError { color: #f66; font-size: 12px; min-height: 16px; margin: 8px 0 0 0; }
+
+    /* Modal dialogs */
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.7);
+      z-index: 9;
+    }
+    .modal.active {
+      display: flex;
+    }
+    .modal .panel {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 24px;
+      min-width: 400px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+    }
+    .modal h3 {
+      margin-top: 0;
+      margin-bottom: 16px;
+      color: var(--accent);
+    }
+    .modal-close {
+      float: right;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+    }
+    .modal-close:hover {
+      color: var(--accent);
+    }
+    .modal-member-item {
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 10px;
+      background: #141414;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-member-item .actions {
+      display: flex;
+      gap: 6px;
+    }
+    .modal-member-item button {
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+    .modal form {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .modal form label {
+      margin-top: 12px;
+    }
+    .modal form input {
+      margin-top: 4px;
+    }
+    .profile-section {
+      text-align: center;
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+    .profile-avatar-large {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      margin: 0 auto 16px;
+      border: 3px solid var(--accent);
+      background: linear-gradient(135deg, rgba(247,162,79,0.3), rgba(247,185,123,0.3));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 36px;
+      overflow: hidden;
+      position: relative;
+    }
+    .profile-avatar-large img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .profile-avatar-upload {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background: var(--accent);
+      color: #000;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      border: 2px solid #111;
+    }
+    .profile-info {
+      margin-bottom: 16px;
+    }
+    .profile-info-item {
+      padding: 12px;
+      background: #141414;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      border: 1px solid var(--border);
+    }
+    .profile-info-label {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .profile-info-value {
+      font-size: 14px;
+      color: var(--text);
+      word-break: break-all;
+    }
+    .profile-actions {
+      display: flex;
+      gap: 8px;
+      flex-direction: column;
+    }
+    .profile-actions button {
+      width: 100%;
+      text-align: center;
+    }
+    #profilePicInput {
+      display: none;
+    }
+    /* Report row colors */
+    .row-past-due { background: rgba(255, 100, 100, 0.08); }
+    .row-just-started { background: rgba(173, 216, 230, 0.06); }
+    .row-in-progress { background: rgba(173, 216, 230, 0.03); }
+    .row-completed-on-time { background: rgba(144, 238, 144, 0.06); }
+    .row-completed-past-due { background: rgba(255, 200, 100, 0.08); }
+    .row-nearing-deadline { background: rgba(255, 193, 7, 0.06); }
+    /* Responsive adjustments */
+    @media (max-width: 900px) {
+      header { padding: 10px 12px; }
+      header h1 { font-size: 18px; }
+      .layout { grid-template-columns: 1fr; height: auto; }
+      .left, .right { height: auto; }
+      .user-menu { right: 12px; top: 56px; }
+      .modal .panel { min-width: 90%; max-width: 720px; }
+      .profile-avatar-large { width: 80px; height: 80px; font-size: 28px; }
+    }
+    @media (max-width: 480px) {
+      header h1 { font-size: 16px; }
+      .user-avatar { width: 28px; height: 28px; }
+      .member-item { padding: 8px; }
+      th, td { font-size: 12px; padding: 6px; }
+      .modal .panel { padding: 16px; }
+      .profile-avatar-large { width: 64px; height: 64px; font-size: 22px; }
+    }
+    /* Responsive table: stack rows on small screens */
+    @media (max-width: 760px) {
+      table.responsive thead { display: none; }
+      table.responsive, table.responsive tbody, table.responsive tr, table.responsive td { display: block; width: 100%; }
+      table.responsive tr { margin-bottom: 12px; border: 1px solid var(--border); border-radius: 8px; padding: 8px; background: #141414; }
+      table.responsive td { border: none; padding: 6px 8px; }
+      table.responsive td:before { content: attr(data-label) ": "; display: inline-block; width: 36%; color: var(--muted); font-weight: 600; }
+      table.responsive td .value { display: inline-block; width: 62%; }
+      .task-actions { display: flex; gap: 8px; margin-top: 6px; }
+    }
   </style>
 </head>
 <body>
+  <div id="loginOverlay">
+    <div class="panel">
+      <h3 style="margin-top:0;">Login</h3>
+      <form id="loginForm">
+        <label>Username</label>
+        <input id="loginUsername" required>
+        <label style="margin-top:8px;display:block;">Password</label>
+        <input id="loginPassword" type="password" required>
+        <div style="margin-top:12px;text-align:right;">
+          <button type="submit" class="primary">Login</button>
+        </div>
+      </form>
+      <p id="loginError"></p>
+    </div>
+  </div>
+
+  <!-- Edit Members Modal -->
+  <div id="editMembersModal" class="modal">
+    <div class="panel">
+      <button class="modal-close" onclick="closeEditMembersModal()">&times;</button>
+      <h3>Manage Team Members</h3>
+      <div id="membersList"></div>
+
+      <!-- Member Edit Form (hidden until editing) -->
+      <div id="memberEditForm" style="display:none;margin-top:16px;">
+        <h4 style="margin-top:0;color:var(--accent);">Edit Member</h4>
+        <form id="memberEditFormElement">
+          <label>Name</label>
+          <input id="editMemberName" name="name" required>
+          <label style="margin-top:8px;display:block;">Career Level</label>
+          <input id="editMemberLevel" name="career_level">
+          <label class="checkbox-inline"><input type="checkbox" id="editMemberLead" name="is_lead"> Team Lead</label>
+          <label class="checkbox-inline"><input type="checkbox" id="editMemberLocked" name="is_locked"> Locked</label>
+          <label style="margin-top:8px;display:block;">New Password (leave blank to keep current)</label>
+          <input id="editMemberPassword" name="password" type="password">
+          <div style="margin-top:12px; display:flex; gap:8px; justify-content:flex-end;">
+            <button type="button" class="secondary" onclick="closeMemberEditForm()">Cancel</button>
+            <button type="submit" class="primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
+      <div style="margin-top: 20px; text-align: right;">
+        <button onclick="closeEditMembersModal()" class="secondary">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change Password Modal -->
+  <div id="changePasswordModal" class="modal">
+    <div class="panel">
+      <button class="modal-close" onclick="closeChangePasswordModal()">&times;</button>
+      <h3>Change Password</h3>
+      <form id="changePasswordForm">
+        <label>Current Password</label>
+        <input id="currentPassword" type="password" required>
+        <label style="margin-top: 12px; display: block;">New Password</label>
+        <input id="newPassword" type="password" required>
+        <label style="margin-top: 12px; display: block;">Confirm Password</label>
+        <input id="confirmPassword" type="password" required>
+        <p id="passwordError" style="color: #f66; font-size: 12px; margin: 8px 0;"></p>
+        <div style="margin-top: 16px; display: flex; gap: 8px; justify-content: flex-end;">
+          <button type="button" class="secondary" onclick="closeChangePasswordModal()">Cancel</button>
+          <button type="submit" class="primary">Update Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Profile Modal -->
+  <div id="profileModal" class="modal">
+    <div class="panel">
+      <button class="modal-close" onclick="closeProfileModal()">&times;</button>
+      <h3>My Profile</h3>
+      <div class="profile-section">
+        <div class="profile-avatar-large" id="profileAvatar">A
+          <div class="profile-avatar-upload" onclick="triggerProfilePicUpload()">📷</div>
+        </div>
+        <input type="file" id="profilePicInput" accept="image/*" onchange="uploadProfilePic(event)">
+        <h2 id="profileName" style="margin: 12px 0 4px 0;"></h2>
+        <p id="profileUsername" style="color: var(--muted); font-size: 12px; margin: 0;"></p>
+      </div>
+      <div class="profile-info">
+        <div class="profile-info-item">
+          <div class="profile-info-label">Career Level</div>
+          <div class="profile-info-value" id="profileCareerLevel">—</div>
+        </div>
+        <div class="profile-info-item">
+          <div class="profile-info-label">Role</div>
+          <div class="profile-info-value" id="profileRole">—</div>
+        </div>
+        <div class="profile-info-item">
+          <div class="profile-info-label">Member Since</div>
+          <div class="profile-info-value" id="profileCreatedAt">—</div>
+        </div>
+      </div>
+      <div style="text-align: right;">
+        <button onclick="closeProfileModal()" class="secondary">Close</button>
+        <button onclick="deleteMyAvatar()" class="secondary" style="margin-left:8px;">Delete Avatar</button>
+      </div>
+    </div>
+  </div>
+
   <header>
     <h1>Team Effort Tracker</h1>
-    <div>
-      <label for="actorSelect">Acting as:</label>
-      <select id="actorSelect"></select>
+    <div class="header-right">
+      <div style="position: relative;">
+        <div class="user-menu-trigger" id="userMenuTrigger">
+          <div class="user-avatar" id="headerAvatar">A</div>
+          <span id="headerUserName">User</span>
+        </div>
+        <div class="user-menu" id="userMenu">
+          <div class="user-menu-item" onclick="openProfileModal()">My Profile</div>
+          <div class="user-menu-item" onclick="openChangePasswordModal()">Change Password</div>
+          <div class="user-menu-item" onclick="logout()">Logout</div>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -159,11 +574,11 @@
           <div class="grid-two">
             <div>
               <label>Create member</label>
+              <input id="newMemberUsername" placeholder="Username">
+              <input id="newMemberPassword" placeholder="Password" type="password">
               <input id="newMemberName" placeholder="Name">
               <input id="newMemberLevel" placeholder="Career level">
-              <label style="margin-top:6px;display:block;">
-                <input type="checkbox" id="newMemberLead"> Lead
-              </label>
+              <label class="checkbox-inline"><input type="checkbox" id="newMemberLead"> Lead</label>
               <button class="primary" id="createMemberBtn">Save member</button>
             </div>
             <div>
@@ -174,6 +589,29 @@
                 <button id="semesterReport" class="secondary">Semester CSV</button>
               </div>
             </div>
+            <div>
+              <label>Custom Report</label>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="display:flex;gap:8px;">
+                  <input type="date" id="reportStartDate" style="flex:1;">
+                  <input type="date" id="reportEndDate" style="flex:1;">
+                </div>
+                <select id="reportMemberSelect">
+                  <option value="">-- All members --</option>
+                </select>
+                <select id="reportStatusSelect">
+                  <option value="">All statuses</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                </select>
+                <button class="primary" id="generateReportBtn">Generate Report</button>
+                <button class="secondary" id="exportExcelBtn">Export to Excel</button>
+              </div>
+            </div>
+            <div>
+              <label>Management</label>
+              <button class="secondary" id="editMembersBtn" style="width: 100%;">Edit Members</button>
+            </div>
           </div>
         </div>
       </div>
@@ -181,7 +619,10 @@
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <h3 style="margin:0;">Tasks</h3>
-          <button class="primary" id="showFormBtn">Add Task</button>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button class="primary" id="showFormBtn">Add Task</button>
+              <button class="secondary" id="myReportBtn">My Report</button>
+            </div>
         </div>
         <div id="taskForm" style="display:none; margin-top:12px;">
           <form id="taskFormElement">
@@ -200,6 +641,13 @@
             <div>
               <label>Due date</label>
               <input name="due_date" type="date">
+            </div>
+            <div>
+              <label>Status</label>
+              <select name="status" id="statusSelect">
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
             </div>
             <div>
               <label>Blockers</label>
@@ -224,7 +672,7 @@
           </div>
         </div>
 
-        <table id="taskTable">
+        <table id="taskTable" class="responsive">
           <thead>
             <tr>
               <th>Sr.</th>
@@ -236,17 +684,49 @@
               <th>Blockers</th>
               <th>Comments</th>
               <th>Tags</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody></tbody>
         </table>
       </div>
     </section>
+    <section class="right" style="grid-column: 1 / -1;">
+      <div class="card" id="reportCard" style="margin-top:12px;">
+        <h3 style="margin-top:0;">Report Results</h3>
+        <div id="reportSummary" style="margin-bottom:12px;color:var(--muted);"></div>
+        <div id="reportFilters" style="margin-bottom:8px;display:flex;gap:8px;align-items:center;">
+          <label style="margin:0;font-size:12px;color:var(--muted);">Filter status:</label>
+          <select id="reportResultStatusFilter">
+            <option value="">All</option>
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="past_due">Past Due</option>
+          </select>
+          <button class="secondary" id="exportReportExcelBtn" style="margin-left:auto;">Export Results to Excel</button>
+        </div>
+        <div style="overflow:auto;max-height:320px;">
+          <table id="reportTable" style="width:100%">
+            <thead>
+              <tr>
+                <th>Sr.</th>
+                <th>Task</th>
+                <th>Assignee</th>
+                <th>Hours</th>
+                <th>Due</th>
+                <th>Status</th>
+                <th>Blockers</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
   </div>
 
   <script>
     const memberListEl = document.getElementById('memberList');
-    const actorSelect = document.getElementById('actorSelect');
     const teamNameEl = document.getElementById('teamName');
     const memberNameEl = document.getElementById('memberName');
     const careerLevelEl = document.getElementById('careerLevel');
@@ -265,14 +745,44 @@
     const newMemberName = document.getElementById('newMemberName');
     const newMemberLevel = document.getElementById('newMemberLevel');
     const newMemberLead = document.getElementById('newMemberLead');
+    const newMemberUsername = document.getElementById('newMemberUsername');
+    const newMemberPassword = document.getElementById('newMemberPassword');
     const reportButtons = {
       weekly: document.getElementById('weeklyReport'),
       monthly: document.getElementById('monthlyReport'),
       semester: document.getElementById('semesterReport')
     };
 
+    const loginOverlay = document.getElementById('loginOverlay');
+    const loginForm = document.getElementById('loginForm');
+    const loginUsername = document.getElementById('loginUsername');
+    const loginPassword = document.getElementById('loginPassword');
+    const loginError = document.getElementById('loginError');
+    const editMembersModal = document.getElementById('editMembersModal');
+    const editMembersBtn = document.getElementById('editMembersBtn');
+    const membersList = document.getElementById('membersList');
+    const changePasswordModal = document.getElementById('changePasswordModal');
+    const changePasswordForm = document.getElementById('changePasswordForm');
+    const passwordError = document.getElementById('passwordError');
+    const userMenuTrigger = document.getElementById('userMenuTrigger');
+    const userMenu = document.getElementById('userMenu');
+    const headerUserName = document.getElementById('headerUserName');
+    const headerAvatar = document.getElementById('headerAvatar');
+    const profileModal = document.getElementById('profileModal');
+    const profilePicInput = document.getElementById('profilePicInput');
+    const profileAvatar = document.getElementById('profileAvatar');
+    const profileName = document.getElementById('profileName');
+    const profileUsername = document.getElementById('profileUsername');
+    const profileCareerLevel = document.getElementById('profileCareerLevel');
+    const profileRole = document.getElementById('profileRole');
+    const profileCreatedAt = document.getElementById('profileCreatedAt');
+
     let members = [];
     let activeMember = null;
+    let token = localStorage.getItem('authToken') || null;
+    let currentUser = JSON.parse(localStorage.getItem('currentMember') || 'null');
+    let editingTaskId = null;
+    let userProfilePic = localStorage.getItem('userProfilePic') || null;
 
     function tickClock() {
       const now = new Date();
@@ -282,15 +792,316 @@
     tickClock();
 
     async function fetchJSON(url, options = {}) {
-      const actorId = actorSelect.value;
       const headers = Object.assign({'Content-Type': 'application/json'}, options.headers || {});
-      if (actorId) headers['X-Actor-Id'] = actorId;
+      if (token) headers['Authorization'] = `Bearer ${token}`;
       const res = await fetch(url, {...options, headers});
       if (!res.ok) {
         const txt = await res.text();
         throw new Error(txt || res.statusText);
       }
+      if (res.status === 204) return null;
       return res.json();
+    }
+
+    async function login(username, password) {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({username, password})
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || 'Login failed');
+      }
+      const data = await res.json();
+      token = data.access_token;
+      currentUser = data.member;
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('currentMember', JSON.stringify(currentUser));
+      loginOverlay.style.display = 'none';
+      updateHeaderDisplay();
+    }
+
+    function logout() {
+      token = null;
+      currentUser = null;
+      activeMember = null;
+      userProfilePic = null;
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('currentMember');
+      localStorage.removeItem('userProfilePic');
+      loginOverlay.style.display = 'flex';
+      loginForm.reset();
+      loginError.textContent = '';
+      loginUsername.focus();
+      closeUserMenu();
+      closeProfileModal();
+      updateHeaderDisplay();
+    }
+
+    function updateHeaderDisplay() {
+      if (currentUser) {
+        headerUserName.textContent = currentUser.name.split(' ')[0];
+        refreshAvatar();
+        document.body.classList.remove('logged-out');
+      } else {
+        headerUserName.textContent = 'User';
+        document.body.classList.add('logged-out');
+      }
+    }
+
+    function updateAvatarDisplayFallback(src) {
+      const initial = currentUser ? currentUser.name.charAt(0).toUpperCase() : 'A';
+      if (src) {
+        headerAvatar.innerHTML = `<img src="${src}" alt="Profile">`;
+        profileAvatar.innerHTML = `<img src="${src}" alt="Profile"><div class="profile-avatar-upload" onclick="triggerProfilePicUpload()">📷</div>`;
+      } else {
+        headerAvatar.textContent = initial;
+        profileAvatar.innerHTML = initial + '<div class="profile-avatar-upload" onclick="triggerProfilePicUpload()">📷</div>';
+      }
+    }
+
+    async function refreshAvatar() {
+      try {
+        if (!currentUser) return updateAvatarDisplayFallback(null);
+        const info = await fetchJSON(`/api/members/${currentUser.id}/avatar`);
+        if (info && info.exists && info.url) {
+          const src = info.url + '?_=' + Date.now();
+          return updateAvatarDisplayFallback(src);
+        }
+      } catch (err) {
+        console.warn('Failed to fetch avatar info', err);
+      }
+      if (userProfilePic) return updateAvatarDisplayFallback(userProfilePic);
+      return updateAvatarDisplayFallback(null);
+    }
+
+    function openProfileModal() {
+      if (!currentUser) return;
+      profileModal.classList.add('active');
+      profileName.textContent = currentUser.name;
+      profileUsername.textContent = `@${currentUser.username}`;
+      profileCareerLevel.textContent = currentUser.career_level || '—';
+      profileRole.textContent = currentUser.is_lead ? 'Team Lead' : 'Team Member';
+      profileCreatedAt.textContent = new Date(currentUser.created_at).toLocaleDateString();
+      closeUserMenu();
+    }
+
+    function closeProfileModal() {
+      profileModal.classList.remove('active');
+    }
+
+    function triggerProfilePicUpload() {
+      profilePicInput.click();
+    }
+
+    function uploadProfilePic(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        userProfilePic = e.target.result;
+        // attempt to upload to server so avatars sync across devices
+        (async () => {
+            try {
+              const res = await fetchJSON(`/api/members/${currentUser.id}/avatar`, {
+                method: 'POST',
+                body: JSON.stringify({ data_url: userProfilePic })
+              });
+              // clear local-only pic
+              localStorage.removeItem('userProfilePic');
+              userProfilePic = null;
+              if (res && res.url) {
+                // set returned url immediately
+                updateAvatarDisplayFallback(res.url + '?_=' + Date.now());
+                return;
+              } else {
+                await refreshAvatar();
+              }
+              alert('Profile picture uploaded and synced to server.');
+            } catch (err) {
+              // fallback to local storage if upload fails
+              localStorage.setItem('userProfilePic', userProfilePic);
+              updateAvatarDisplayFallback(userProfilePic);
+              alert('Profile picture saved locally (server upload failed): ' + err.message);
+            }
+        })();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function deleteMyAvatar() {
+      if (!currentUser) return alert('Not logged in');
+      if (!confirm('Delete your avatar? This cannot be undone.')) return;
+      try {
+        await fetchJSON(`/api/members/${currentUser.id}/avatar`, { method: 'DELETE' });
+        // Clear any local stored image and refresh display
+        localStorage.removeItem('userProfilePic');
+        userProfilePic = null;
+        refreshAvatar();
+        alert('Avatar deleted');
+      } catch (err) {
+        alert('Failed to delete avatar: ' + (err.message || err));
+      }
+    }
+
+    // Poll for avatar availability: used when server processing/storage may be delayed
+    async function waitForAvatar(memberId, timeoutMs = 10000, intervalMs = 800) {
+      const started = Date.now();
+      while (Date.now() - started < timeoutMs) {
+        try {
+          const info = await fetchJSON(`/api/members/${memberId}/avatar`);
+          if (info && info.exists && info.url) return info.url;
+        } catch (e) {
+          // ignore transient errors
+        }
+        await new Promise(r => setTimeout(r, intervalMs));
+      }
+      return null;
+    }
+
+    function toggleUserMenu() {
+      userMenu.classList.toggle('active');
+    }
+
+    function closeUserMenu() {
+      userMenu.classList.remove('active');
+    }
+
+    function openEditMembersModal() {
+      editMembersModal.classList.add('active');
+      renderEditMembersModal();
+    }
+
+    function closeEditMembersModal() {
+      editMembersModal.classList.remove('active');
+    }
+
+    function renderEditMembersModal() {
+      membersList.innerHTML = members.map(m => `
+        <div class="modal-member-item">
+          <div>
+            <strong>${m.name}</strong><br>
+            <span style="font-size: 12px; color: var(--muted);">@${m.username} • ${m.career_level}${m.is_lead ? ' • Lead' : ''}${m.is_locked ? ' • Locked' : ''}</span>
+          </div>
+          <div class="actions">
+            <button class="secondary" onclick="openMemberEditForm(${m.id})">Edit</button>
+            <button class="secondary" onclick="deleteMemberModal(${m.id})">Delete</button>
+          </div>
+        </div>
+      `).join('');
+    }
+    function openMemberEditForm(memberId) {
+      const member = members.find(m => m.id === memberId);
+      if (!member) return;
+      document.getElementById('memberEditForm').style.display = 'block';
+      document.getElementById('editMemberName').value = member.name || '';
+      document.getElementById('editMemberLevel').value = member.career_level || '';
+      document.getElementById('editMemberLead').checked = !!member.is_lead;
+      document.getElementById('editMemberLocked').checked = !!member.is_locked;
+      document.getElementById('editMemberPassword').value = '';
+      document.getElementById('memberEditFormElement').dataset.editingId = memberId;
+      // scroll into view inside modal
+      document.getElementById('memberEditForm').scrollIntoView({behavior: 'smooth', block: 'center'});
+    }
+
+    function closeMemberEditForm() {
+      document.getElementById('memberEditForm').style.display = 'none';
+      document.getElementById('memberEditFormElement').dataset.editingId = '';
+    }
+
+    document.getElementById('memberEditFormElement').onsubmit = async function(e) {
+      e.preventDefault();
+      const memberId = parseInt(this.dataset.editingId);
+      if (!memberId) return;
+      const payload = {};
+      const name = document.getElementById('editMemberName').value.trim();
+      const career_level = document.getElementById('editMemberLevel').value.trim();
+      const is_lead = document.getElementById('editMemberLead').checked;
+      const is_locked = document.getElementById('editMemberLocked').checked;
+      const password = document.getElementById('editMemberPassword').value;
+      if (name) payload.name = name;
+      if (career_level) payload.career_level = career_level;
+      payload.is_lead = is_lead;
+      payload.is_locked = is_locked;
+      if (password && password.length > 0) payload.password = password;
+      try {
+        await updateMemberDetails(memberId, payload);
+        closeMemberEditForm();
+      } catch (err) {
+        alert('Error updating member: ' + err.message);
+      }
+    };
+
+    async function updateMemberDetails(memberId, payload) {
+      try {
+        await fetchJSON(`/api/members/${memberId}`, {
+          method: 'PUT',
+          body: JSON.stringify(payload)
+        });
+        await loadMembers();
+        renderEditMembersModal();
+      } catch (err) {
+        alert('Error updating member: ' + err.message);
+      }
+    }
+
+    function deleteMemberModal(memberId) {
+      if (confirm('Are you sure you want to delete this member?')) {
+        deleteMember(memberId);
+      }
+    }
+
+    async function deleteMember(memberId) {
+      try {
+        await fetchJSON(`/api/members/${memberId}`, { method: 'DELETE' });
+        await loadMembers();
+        renderEditMembersModal();
+      } catch (err) {
+        alert('Error deleting member: ' + err.message);
+      }
+    }
+
+    function openChangePasswordModal() {
+      changePasswordModal.classList.add('active');
+      passwordError.textContent = '';
+      changePasswordForm.reset();
+    }
+
+    function closeChangePasswordModal() {
+      changePasswordModal.classList.remove('active');
+      passwordError.textContent = '';
+    }
+
+    async function startEditTask(taskId) {
+  const task = (await fetchJSON(`/api/tasks?member_id=${activeMember?.id || currentUser?.id || ''}`))
+                 .find(t => t.id === taskId);
+  if (!task) return;
+  editingTaskId = taskId;
+  taskFormContainer.style.display = 'block';
+  taskFormElement.title.value = task.title;
+  taskFormElement.details.value = task.details || '';
+  taskFormElement.hours_spent.value = task.hours_spent ?? '';
+  taskFormElement.due_date.value = task.due_date || '';
+  taskFormElement.blockers.value = task.blockers || '';
+  taskFormElement.comments.value = task.comments || '';
+  document.getElementById('statusSelect').value = task.status || 'in_progress';
+  assigneeSelect.value = task.assignee_id || '';
+  Array.from(tagSelect.options).forEach(opt => {
+    opt.selected = (task.tags || []).includes(parseInt(opt.value));
+  });
+}
+function editTask(id) {
+  startEditTask(id);
+}
+
+// optional placeholder so the Delete button doesn’t throw
+function deleteTask(id) {
+  alert('Delete not implemented yet');
+}
+    function requireLoginUI() {
+      loginOverlay.style.display = 'flex';
     }
 
     function renderMembers() {
@@ -302,78 +1113,91 @@
         li.onclick = () => selectMember(m.id);
         memberListEl.appendChild(li);
       });
-      // Populate selects
       assigneeSelect.innerHTML = members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
       tagSelect.innerHTML = members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+      const reportMemberSelect = document.getElementById('reportMemberSelect');
+      if (reportMemberSelect) {
+        reportMemberSelect.innerHTML = '<option value="">-- All members --</option>' + members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+      }
     }
 
     async function loadMembers() {
+      if (!token) return;
       members = await fetchJSON('/api/members');
-      actorSelect.innerHTML = members.map(m => `<option value="${m.id}">${m.name}${m.is_lead ? ' (Lead)' : ''}</option>`).join('');
-      if (!activeMember && members.length) {
-        activeMember = members[0];
-      } else if (activeMember) {
-        activeMember = members.find(m => m.id === activeMember.id) || members[0];
+      if (!currentUser && members.length) {
+        currentUser = members[0];
       }
-      actorSelect.value = activeMember?.id || '';
+      if (!activeMember) {
+        activeMember = currentUser && !currentUser.is_lead ? currentUser : (members[0] || null);
+      }
       renderMembers();
       updateHeader();
-      loadTasks();
       toggleLeadPanel();
+      loadTasks();
     }
 
     function toggleLeadPanel() {
-      const actor = members.find(m => m.id == actorSelect.value);
-      leadPanel.style.display = actor && actor.is_lead ? 'block' : 'none';
-      assigneeField.style.display = actor && actor.is_lead ? 'block' : 'none';
+      const isLead = currentUser && currentUser.is_lead;
+      leadPanel.style.display = isLead ? 'block' : 'none';
+      assigneeField.style.display = isLead ? 'block' : 'none';
     }
 
     function updateHeader() {
       if (!activeMember) return;
       teamNameEl.textContent = 'Team';
       memberNameEl.textContent = activeMember.name;
-      careerLevelEl.textContent = activeMember.career_level + (activeMember.is_lead ? ' • Lead' : '');
+      careerLevelEl.textContent = `${activeMember.career_level}${activeMember.is_lead ? ' • Lead' : ''}`;
     }
 
     async function loadTasks() {
       if (!activeMember) return;
-      const tasks = await fetchJSON(`/api/tasks?member_id=${activeMember.id}`);
+      const targetId = (currentUser && !currentUser.is_lead) ? currentUser.id : activeMember.id;
+      const tasks = await fetchJSON(`/api/tasks?member_id=${targetId}`);
       taskTableBody.innerHTML = '';
       tasks.forEach((t, idx) => {
-        const tr = document.createElement('tr');
         const tags = (t.tags || []).map(id => {
           const m = members.find(mem => mem.id === id);
           return `<span class="badge">${m ? m.name : id}</span>`;
         }).join('');
+        const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>${idx + 1}</td>
-          <td>${t.title}</td>
-          <td>${t.details || ''}</td>
-          <td>${t.hours_spent ?? ''}</td>
-          <td>${t.due_date || ''}</td>
-          <td>${t.status}</td>
-          <td>${t.blockers || ''}</td>
-          <td>${t.comments || ''}</td>
-          <td>${tags}</td>
+          <td data-label="Sr."><span class="value">${idx + 1}</span></td>
+          <td data-label="Task Name"><span class="value">${t.title}</span></td>
+          <td data-label="Details"><span class="value">${t.details || ''}</span></td>
+          <td data-label="Hours"><span class="value">${t.hours_spent ?? ''}</span></td>
+          <td data-label="Due"><span class="value">${t.due_date || ''}</span></td>
+          <td data-label="Status"><span class="value">${t.status}</span></td>
+          <td data-label="Blockers"><span class="value">${t.blockers || ''}</span></td>
+          <td data-label="Comments"><span class="value">${t.comments || ''}</span></td>
+          <td data-label="Tags"><span class="value">${tags}</span></td>
+          <td data-label="Actions"><div class="task-actions"><button class="secondary" onclick="editTask(${t.id})">Edit</button><button class="danger" onclick="deleteTask(${t.id})">Delete</button></div></td>
         `;
         taskTableBody.appendChild(tr);
       });
+      taskTableBody.querySelectorAll('button[data-task-id]').forEach(btn => {
+  btn.onclick = () => {
+    const taskId = parseInt(btn.getAttribute('data-task-id'));
+    startEditTask(taskId);
+  };
+});
     }
 
     function selectMember(id) {
-      activeMember = members.find(m => m.id === id);
-      updateHeader();
-      renderMembers();
-      loadTasks();
-    }
+  if (currentUser && !currentUser.is_lead && id !== currentUser.id) return;
+  activeMember = members.find(m => m.id === id);
+  updateHeader();
+  renderMembers();
+  loadTasks();
+}
 
     showFormBtn.onclick = () => {
       taskFormContainer.style.display = taskFormContainer.style.display === 'none' ? 'block' : 'none';
     };
-    resetFormBtn.onclick = () => taskFormElement.reset();
+    resetFormBtn.onclick = () => { editingTaskId = null; taskFormElement.reset(); };
 
     saveTaskBtn.onclick = async () => {
       const formData = new FormData(taskFormElement);
+      const isLead = currentUser && currentUser.is_lead;
       const payload = {
         title: formData.get('title'),
         details: formData.get('details') || null,
@@ -381,15 +1205,17 @@
         due_date: formData.get('due_date') || null,
         blockers: formData.get('blockers') || null,
         comments: formData.get('comments') || null,
-        assignee_id: formData.get('assignee_id') || null,
         tags: Array.from(tagSelect.selectedOptions).map(o => parseInt(o.value)),
-        status: 'in_progress'
+        status: formData.get('status') || 'in_progress',
+        assignee_id: isLead ? (formData.get('assignee_id') || null) : (currentUser ? currentUser.id : null),
       };
       try {
-        await fetchJSON('/api/tasks', {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        });
+        if (editingTaskId) {
+          await fetchJSON(`/api/tasks/${editingTaskId}`, { method: 'PUT', body: JSON.stringify(payload) });
+        } else {
+          await fetchJSON('/api/tasks', { method: 'POST', body: JSON.stringify(payload) });
+        }
+        editingTaskId = null;
         taskFormElement.reset();
         taskFormContainer.style.display = 'none';
         await loadTasks();
@@ -397,23 +1223,21 @@
         alert('Error saving task: ' + err.message);
       }
     };
-
-    actorSelect.onchange = () => {
-      toggleLeadPanel();
-      loadTasks();
-    };
-
     createMemberBtn.onclick = async () => {
       const payload = {
+        username: newMemberUsername.value,
+        password: newMemberPassword.value,
         name: newMemberName.value,
         career_level: newMemberLevel.value || 'Team Member',
         is_lead: newMemberLead.checked
       };
       try {
-        await fetchJSON('/api/members', { method: 'POST', body: JSON.stringify(payload) });
+        await fetchJSON('/api/auth/users', { method: 'POST', body: JSON.stringify(payload) });
         newMemberName.value = '';
         newMemberLevel.value = '';
         newMemberLead.checked = false;
+        newMemberUsername.value = '';
+        newMemberPassword.value = '';
         await loadMembers();
       } catch (err) {
         alert('Error creating member: ' + err.message);
@@ -422,10 +1246,9 @@
 
     Object.entries(reportButtons).forEach(([period, btn]) => {
       btn.onclick = () => {
-        const actorId = actorSelect.value;
-        if (!actorId) return;
+        if (!token) return;
         const url = `/api/reports?period=${period}&format=csv`;
-        fetch(url, { headers: { 'X-Actor-Id': actorId } })
+        fetch(url, { headers: { 'Authorization': `Bearer ${token}` } })
           .then(res => res.blob())
           .then(blob => {
             const link = document.createElement('a');
@@ -436,8 +1259,209 @@
       };
     });
 
-    loadMembers();
+    loginForm.onsubmit = async (e) => {
+      e.preventDefault();
+      loginError.textContent = '';
+      try {
+        await login(loginUsername.value, loginPassword.value);
+        await loadMembers();
+      } catch (err) {
+        loginError.textContent = err.message || 'Login failed';
+      }
+    };
+
+    userMenuTrigger.onclick = (e) => {
+      e.stopPropagation();
+      toggleUserMenu();
+    };
+
+    document.addEventListener('click', (e) => {
+      if (!userMenuTrigger.contains(e.target) && !userMenu.contains(e.target)) {
+        closeUserMenu();
+      }
+    });
+
+    editMembersBtn.onclick = () => {
+      openEditMembersModal();
+    };
+
+    changePasswordForm.onsubmit = async (e) => {
+      e.preventDefault();
+      passwordError.textContent = '';
+      const currentPassword = document.getElementById('currentPassword').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+
+      if (newPassword !== confirmPassword) {
+        passwordError.textContent = 'New passwords do not match';
+        return;
+      }
+
+      if (newPassword.length < 6) {
+        passwordError.textContent = 'Password must be at least 6 characters';
+        return;
+      }
+
+      try {
+        await fetchJSON(`/api/auth/change-password`, {
+          method: 'POST',
+          body: JSON.stringify({
+            current_password: currentPassword,
+            new_password: newPassword
+          })
+        });
+        alert('Password changed successfully');
+        closeChangePasswordModal();
+      } catch (err) {
+        passwordError.textContent = 'Error: ' + (err.message || 'Failed to change password');
+      }
+    };
+
+    // Report generation
+    const generateReportBtn = document.getElementById('generateReportBtn');
+    const reportStartDate = document.getElementById('reportStartDate');
+    const reportEndDate = document.getElementById('reportEndDate');
+    const reportMemberSelect = document.getElementById('reportMemberSelect');
+    const reportStatusSelect = document.getElementById('reportStatusSelect');
+    const reportSummary = document.getElementById('reportSummary');
+    const reportTable = document.getElementById('reportTable').querySelector('tbody');
+    const reportResultStatusFilter = document.getElementById('reportResultStatusFilter');
+
+    function renderReportRows(rows) {
+      reportTable.innerHTML = '';
+      rows.forEach((r, idx) => {
+        const tr = document.createElement('tr');
+        const cls = {
+          past_due: 'row-past-due',
+          just_started: 'row-just-started',
+          in_progress: 'row-in-progress',
+          completed_on_time: 'row-completed-on-time',
+          completed_past_due: 'row-completed-past-due',
+          nearing_deadline: 'row-nearing-deadline',
+        }[r.color_key] || '';
+        if (cls) tr.className = cls;
+        tr.innerHTML = `
+          <td>${idx + 1}</td>
+          <td>${r.title}</td>
+          <td>${r.assignee || ''}</td>
+          <td>${r.hours_spent ?? ''}</td>
+          <td>${r.due_date || ''}</td>
+          <td>${r.status}</td>
+          <td>${r.has_blockers ? 'Yes' : ''}</td>
+        `;
+        reportTable.appendChild(tr);
+      });
+    }
+
+    async function generateReport() {
+      try {
+        const params = new URLSearchParams();
+        params.set('format', 'json');
+        if (reportStartDate.value) params.set('start_date', reportStartDate.value);
+        if (reportEndDate.value) params.set('end_date', reportEndDate.value);
+        if (reportMemberSelect.value) params.set('member_id', reportMemberSelect.value);
+        if (reportStatusSelect.value) params.set('status', reportStatusSelect.value);
+
+        // store last used params so exports from results area can reuse them
+        window._lastReportParams = {
+          start_date: reportStartDate.value || null,
+          end_date: reportEndDate.value || null,
+          member_id: reportMemberSelect ? (reportMemberSelect.value || null) : null,
+          status: reportStatusSelect ? (reportStatusSelect.value || null) : null,
+        };
+
+        const data = await fetchJSON(`/api/reports?${params.toString()}`);
+        reportSummary.innerHTML = `Tasks: <strong>${data.summary.total_tasks}</strong> &nbsp; Hours: <strong>${data.summary.total_hours}</strong> &nbsp; Blockers: <strong>${data.summary.total_blockers}</strong> &nbsp; Past due: <strong>${data.summary.tasks_past_due}</strong>`;
+        window._lastReportRows = data.rows; // keep for client-side filtering
+        renderReportRows(data.rows);
+      } catch (err) {
+        alert('Error generating report: ' + err.message);
+      }
+    }
+
+    generateReportBtn && (generateReportBtn.onclick = generateReport);
+    const exportExcelBtn = document.getElementById('exportExcelBtn');
+    if (exportExcelBtn) {
+      exportExcelBtn.onclick = async () => {
+        try {
+          const params = new URLSearchParams();
+          params.set('format', 'xlsx');
+          if (reportStartDate.value) params.set('start_date', reportStartDate.value);
+          if (reportEndDate.value) params.set('end_date', reportEndDate.value);
+          if (reportMemberSelect.value) params.set('member_id', reportMemberSelect.value);
+          if (reportStatusSelect.value) params.set('status', reportStatusSelect.value);
+          const url = `/api/reports?${params.toString()}`;
+          const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+          if (!res.ok) throw new Error(await res.text());
+          const blob = await res.blob();
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = `report_${reportStartDate.value || 'from'}_${reportEndDate.value || 'to'}.xlsx`;
+          link.click();
+        } catch (err) {
+          alert('Error exporting to Excel: ' + err.message);
+        }
+      };
+    }
+    // bind My Report button for non-leads and leads (quick personal report)
+    const myReportBtn = document.getElementById('myReportBtn');
+    if (myReportBtn) {
+      myReportBtn.onclick = () => {
+        // reset filters to default personal report
+        reportStartDate.value = '';
+        reportEndDate.value = '';
+        reportMemberSelect && (reportMemberSelect.value = '');
+        reportStatusSelect && (reportStatusSelect.value = '');
+        generateReport();
+      };
+    }
+    reportResultStatusFilter && (reportResultStatusFilter.onchange = () => {
+      const f = reportResultStatusFilter.value;
+      const rows = (window._lastReportRows || []).filter(r => {
+        if (!f) return true;
+        if (f === 'past_due') return r.color_key === 'past_due';
+        return r.status === f;
+      });
+      renderReportRows(rows);
+    });
+    const exportReportExcelBtn = document.getElementById('exportReportExcelBtn');
+    if (exportReportExcelBtn) {
+      exportReportExcelBtn.onclick = async () => {
+        try {
+          const params = new URLSearchParams();
+          params.set('format', 'xlsx');
+          const lp = window._lastReportParams || {};
+          const start = lp.start_date || reportStartDate.value || undefined;
+          const end = lp.end_date || reportEndDate.value || undefined;
+          const status = lp.status || reportStatusSelect.value || undefined;
+          let member = lp.member_id || (reportMemberSelect ? reportMemberSelect.value : null);
+          if (currentUser && !currentUser.is_lead) member = currentUser.id;
+          if (start) params.set('start_date', start);
+          if (end) params.set('end_date', end);
+          if (status) params.set('status', status);
+          if (member) params.set('member_id', member);
+          const url = `/api/reports?${params.toString()}`;
+          const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+          if (!res.ok) throw new Error(await res.text());
+          const blob = await res.blob();
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = `report_${start || 'from'}_${end || 'to'}.xlsx`;
+          link.click();
+        } catch (err) {
+          alert('Error exporting to Excel: ' + err.message);
+        }
+      };
+    }
+
+    if (!token) {
+      requireLoginUI();
+    } else {
+      loginOverlay.style.display = 'none';
+      updateHeaderDisplay();
+      loadMembers().catch(() => requireLoginUI());
+    }
+    updateHeaderDisplay();
   </script>
 </body>
 </html>
-

@@ -10,6 +10,8 @@ CREATE TABLE members (
     name VARCHAR2(255) NOT NULL,
     career_level VARCHAR2(100) NOT NULL,
     is_lead NUMBER(1) DEFAULT 0,
+    -- is_locked added to support locking member accounts (0 = unlocked, 1 = locked)
+    is_locked NUMBER(1) DEFAULT 0,
     team_id NUMBER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_member_team FOREIGN KEY (team_id) REFERENCES teams(id)

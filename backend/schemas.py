@@ -13,6 +13,7 @@ class TeamCreate(TeamBase):
 
 
 class MemberBase(BaseModel):
+    username: str
     name: str
     career_level: str
     is_lead: bool = False
@@ -20,7 +21,7 @@ class MemberBase(BaseModel):
 
 
 class MemberCreate(MemberBase):
-    pass
+    password: str
 
 
 class MemberUpdate(BaseModel):
@@ -28,14 +29,33 @@ class MemberUpdate(BaseModel):
     career_level: Optional[str] = None
     is_lead: Optional[bool] = None
     team_id: Optional[int] = None
+    password: Optional[str] = None
+    is_locked: Optional[bool] = None
 
 
 class Member(MemberBase):
     id: int
     created_at: datetime
+    is_locked: bool = False
 
     class Config:
         from_attributes = True
+
+
+class MemberLogin(BaseModel):
+    username: str
+    password: str
+
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
+
+
+class AuthResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    member: Member
 
 
 class TaskBase(BaseModel):
@@ -78,4 +98,3 @@ class Task(TaskBase):
 
 class TaskTagCreate(BaseModel):
     member_id: int
-

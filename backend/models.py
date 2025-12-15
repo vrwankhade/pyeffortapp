@@ -30,19 +30,18 @@ class Member(Base):
     __tablename__ = "members"
 
     id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(150), unique=True, nullable=False)
+    password_hash = Column(String(255), nullable=False)
     name = Column(String(255), nullable=False)
     career_level = Column(String(100), nullable=False)
     is_lead = Column(Boolean, default=False)
+    is_locked = Column(Boolean, default=False)
     team_id = Column(Integer, ForeignKey("teams.id", ondelete="SET NULL"))
     created_at = Column(DateTime, default=datetime.utcnow)
 
     team = relationship("Team", back_populates="members")
-    tasks = relationship(
-        "Task", back_populates="assignee", foreign_keys="Task.assignee_id"
-    )
-    created_tasks = relationship(
-        "Task", back_populates="creator", foreign_keys="Task.creator_id"
-    )
+    tasks = relationship("Task", back_populates="assignee", foreign_keys="Task.assignee_id")
+    created_tasks = relationship("Task", back_populates="creator", foreign_keys="Task.creator_id")
     tagged_tasks = relationship("TaskTag", back_populates="member")
 
 
@@ -79,3 +78,14 @@ class TaskTag(Base):
     task = relationship("Task", back_populates="tags")
     member = relationship("Member", back_populates="tagged_tasks")
 
+
+class SessionToken(Base):
+    __tablename__ = "session_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    token = Column(String(255), unique=True, nullable=False)
+    member_id = Column(Integer, ForeignKey("members.id", ondelete="CASCADE"))
+    expires_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    member = relationship("Member")
