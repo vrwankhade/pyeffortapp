@@ -1079,6 +1079,13 @@
             updateHeaderDisplay();
           }
         }
+        // ensure the lead team filter includes the updated member's team so they stay visible
+        const leadTeamFilterEl = document.getElementById('leadTeamFilter');
+        const updatedMember = members.find(m => m.id === memberId);
+        if (leadTeamFilterEl && updatedMember) {
+          leadTeamFilterEl.value = updatedMember.team_id || '';
+          renderMembers();
+        }
         renderEditMembersModal();
       } catch (err) {
         alert('Error updating member: ' + err.message);
