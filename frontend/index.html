@@ -386,6 +386,15 @@
       color: var(--text);
       word-break: break-all;
     }
+    /* Team colors for team lead screen. These map to team ids (stable id numbers for your seeded teams)
+       If you add new teams, add matching classes or update JS to map ids -> classes. */
+    .member-item.team-1 .pill { background: rgba(135, 206, 250, 0.12); color: #9ed3ff; }
+    .member-item.team-2 .pill { background: rgba(144, 238, 144, 0.08); color: #8fe28a; }
+    .member-item.team-3 .pill { background: rgba(255, 215, 140, 0.06); color: #ffd98b; }
+    /* name-based team classes for seeded team names */
+    .member-item.team-ops .pill { background: rgba(135, 206, 250, 0.12); color: #9ed3ff; }
+    .member-item.team-devops .pill { background: rgba(144, 238, 144, 0.08); color: #8fe28a; }
+    .member-item.team-infra .pill { background: rgba(255, 215, 140, 0.06); color: #ffd98b; }
     .profile-actions {
       display: flex;
       gap: 8px;
@@ -467,6 +476,8 @@
           <input id="editMemberName" name="name" required>
           <label style="margin-top:8px;display:block;">Career Level</label>
           <input id="editMemberLevel" name="career_level">
+          <label style="margin-top:8px;display:block;">Team</label>
+          <select id="editMemberTeam" name="team_id" style="width:100%;margin-top:6px;margin-bottom:6px;"></select>
           <label class="checkbox-inline"><input type="checkbox" id="editMemberLead" name="is_lead"> Team Lead</label>
           <label class="checkbox-inline"><input type="checkbox" id="editMemberLocked" name="is_locked"> Locked</label>
           <label style="margin-top:8px;display:block;">New Password (leave blank to keep current)</label>
@@ -573,13 +584,15 @@
           <p class="section-title">Team Lead Controls</p>
           <div class="grid-two">
             <div>
-              <label>Create member</label>
-              <input id="newMemberUsername" placeholder="Username">
-              <input id="newMemberPassword" placeholder="Password" type="password">
-              <input id="newMemberName" placeholder="Name">
-              <input id="newMemberLevel" placeholder="Career level">
-              <label class="checkbox-inline"><input type="checkbox" id="newMemberLead"> Lead</label>
-              <button class="primary" id="createMemberBtn">Save member</button>
+                  <label>Create member</label>
+                  <input id="newMemberUsername" placeholder="Username">
+                  <input id="newMemberPassword" placeholder="Password" type="password">
+                  <input id="newMemberName" placeholder="Name">
+                  <input id="newMemberLevel" placeholder="Career level">
+                  <label style="margin-top:6px;display:block;">Team</label>
+                  <select id="newMemberTeam" style="width:100%;margin-top:6px;margin-bottom:6px;"></select>
+                  <label class="checkbox-inline"><input type="checkbox" id="newMemberLead"> Lead</label>
+                  <button class="primary" id="createMemberBtn">Save member</button>
             </div>
             <div>
               <label>Reports</label>
@@ -592,6 +605,8 @@
             <div>
               <label>Custom Report</label>
               <div style="display:flex;flex-direction:column;gap:8px;">
+                <label style="margin-top:6px;display:block;">Filter by Team</label>
+                <select id="leadTeamFilter" style="width:100%;margin-top:6px;margin-bottom:6px;"><option value="">-- All teams --</option></select>
                 <div style="display:flex;gap:8px;">
                   <input type="date" id="reportStartDate" style="flex:1;">
                   <input type="date" id="reportEndDate" style="flex:1;">
@@ -983,7 +998,7 @@
         <div class="modal-member-item">
           <div>
             <strong>${m.name}</strong><br>
-            <span style="font-size: 12px; color: var(--muted);">@${m.username} • ${m.career_level}${m.is_lead ? ' • Lead' : ''}${m.is_locked ? ' • Locked' : ''}</span>
+              <span style="font-size: 12px; color: var(--muted);">@${m.username} • ${m.career_level}${m.is_lead ? ' • Lead' : ''}${m.is_locked ? ' • Locked' : ''}${currentUser && currentUser.is_lead && m.team_name ? ' • ' + m.team_name : ''}</span>
           </div>
           <div class="actions">
             <button class="secondary" onclick="openMemberEditForm(${m.id})">Edit</button>
@@ -998,6 +1013,9 @@
       document.getElementById('memberEditForm').style.display = 'block';
       document.getElementById('editMemberName').value = member.name || '';
       document.getElementById('editMemberLevel').value = member.career_level || '';
+      // populate team select if present
+      const editTeamSelect = document.getElementById('editMemberTeam');
+      if (editTeamSelect) editTeamSelect.value = member.team_id || '';
       document.getElementById('editMemberLead').checked = !!member.is_lead;
       document.getElementById('editMemberLocked').checked = !!member.is_locked;
       document.getElementById('editMemberPassword').value = '';
@@ -1018,11 +1036,13 @@
       const payload = {};
       const name = document.getElementById('editMemberName').value.trim();
       const career_level = document.getElementById('editMemberLevel').value.trim();
+      const team_id = document.getElementById('editMemberTeam') ? (document.getElementById('editMemberTeam').value || null) : null;
       const is_lead = document.getElementById('editMemberLead').checked;
       const is_locked = document.getElementById('editMemberLocked').checked;
       const password = document.getElementById('editMemberPassword').value;
       if (name) payload.name = name;
       if (career_level) payload.career_level = career_level;
+      if (team_id !== null) payload.team_id = team_id ? parseInt(team_id) : null;
       payload.is_lead = is_lead;
       payload.is_locked = is_locked;
       if (password && password.length > 0) payload.password = password;
@@ -1108,8 +1128,14 @@ function deleteTask(id) {
       memberListEl.innerHTML = '';
       members.forEach(m => {
         const li = document.createElement('li');
-        li.className = 'member-item' + (activeMember && activeMember.id === m.id ? ' active' : '');
-        li.innerHTML = `<span>${m.name}</span><span class="pill">${m.career_level}${m.is_lead ? ' • Lead' : ''}</span>`;
+        // add team color class when user is a lead and team_id present
+        const teamClass = (currentUser && currentUser.is_lead && m.team_id) ? ` team-${String(m.team_id)}` : '';
+        li.className = 'member-item' + (activeMember && activeMember.id === m.id ? ' active' : '') + teamClass;
+        // if current user is a lead, show team name next to career level
+        const teamText = (currentUser && currentUser.is_lead && m.team_name) ? ` • ${m.team_name}` : '';
+        const teamSlug = m.team_name ? (' team-' + (m.team_name || '').toLowerCase().replace(/[^a-z0-9]+/g,'-')) : '';
+        li.className += teamSlug;
+        li.innerHTML = `<span>${m.name}</span><span class="pill">${m.career_level}${m.is_lead ? ' • Lead' : ''}${teamText}</span>`;
         li.onclick = () => selectMember(m.id);
         memberListEl.appendChild(li);
       });
@@ -1124,6 +1150,13 @@ function deleteTask(id) {
     async function loadMembers() {
       if (!token) return;
       members = await fetchJSON('/api/members');
+      // decorate members with team name if available (backend exposes team_name property)
+      members = members.map(m => ({...m, team_name: m.team_name || null}));
+      // apply team filter for leads if selected
+      const selectedTeam = document.getElementById('leadTeamFilter') ? document.getElementById('leadTeamFilter').value : '';
+      if (currentUser && currentUser.is_lead && selectedTeam) {
+        members = members.filter(m => (m.team_id || '').toString() === selectedTeam.toString());
+      }
       if (!currentUser && members.length) {
         currentUser = members[0];
       }
@@ -1134,6 +1167,25 @@ function deleteTask(id) {
       updateHeader();
       toggleLeadPanel();
       loadTasks();
+    }
+
+    // load teams and populate selects used by lead controls
+    let teams = [];
+    async function loadTeams() {
+      if (!token) return;
+      try {
+        teams = await fetchJSON('/api/teams');
+      } catch (e) {
+        teams = [];
+      }
+      const newTeamSelect = document.getElementById('newMemberTeam');
+      const editTeamSelect = document.getElementById('editMemberTeam');
+      const leadTeamFilter = document.getElementById('leadTeamFilter');
+      const makeOptions = (arr, addEmpty) => (addEmpty ? '<option value="">-- None --</option>' : '') + arr.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+      if (newTeamSelect) newTeamSelect.innerHTML = '<option value="">-- Select team --</option>' + teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+      if (editTeamSelect) editTeamSelect.innerHTML = makeOptions(teams, true);
+      if (leadTeamFilter) leadTeamFilter.innerHTML = '<option value="">-- All teams --</option>' + teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+      if (leadTeamFilter) leadTeamFilter.onchange = () => loadMembers();
     }
 
     function toggleLeadPanel() {
@@ -1229,7 +1281,8 @@ function deleteTask(id) {
         password: newMemberPassword.value,
         name: newMemberName.value,
         career_level: newMemberLevel.value || 'Team Member',
-        is_lead: newMemberLead.checked
+        is_lead: newMemberLead.checked,
+        team_id: newMemberTeam && newMemberTeam.value ? parseInt(newMemberTeam.value) : null,
       };
       try {
         await fetchJSON('/api/auth/users', { method: 'POST', body: JSON.stringify(payload) });
@@ -1459,7 +1512,8 @@ function deleteTask(id) {
     } else {
       loginOverlay.style.display = 'none';
       updateHeaderDisplay();
-      loadMembers().catch(() => requireLoginUI());
+      // load teams first so selects are populated, then members
+      loadTeams().then(() => loadMembers()).catch(() => requireLoginUI());
     }
     updateHeaderDisplay();
   </script>

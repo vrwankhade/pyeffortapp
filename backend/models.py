@@ -44,6 +44,10 @@ class Member(Base):
     created_tasks = relationship("Task", back_populates="creator", foreign_keys="Task.creator_id")
     tagged_tasks = relationship("TaskTag", back_populates="member")
 
+    @property
+    def team_name(self):
+        """Return the name of the member's team, or None."""
+        return self.team.name if self.team else None
 
 class Task(Base):
     __tablename__ = "tasks"

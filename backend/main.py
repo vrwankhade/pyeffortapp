@@ -56,31 +56,35 @@ def startup_event():
     Base.metadata.create_all(bind=engine)
     with next(get_db()) as db:
         if db.query(models.Team).count() == 0:
-            team = models.Team(name="Orange Tigers")
-            db.add(team)
-            db.flush()
-            # seed lead with credentials
+            # create standard teams
+            teams = {}
+            for tname in ("OPS", "DevOPS", "Infra"):
+                tm = models.Team(name=tname)
+                db.add(tm)
+                db.flush()
+                teams[tname] = tm
+            # seed lead with credentials and assign to OPS by default
             lead = models.Member(
                 username="alex.lead",
                 password_hash=security.hash_password("changeme"),
                 name="Alex Lead",
                 career_level="Lead",
                 is_lead=True,
-                team_id=team.id,
+                team_id=teams["OPS"].id,
             )
             member_a = models.Member(
                 username="bailey.dev",
                 password_hash=security.hash_password("changeme"),
                 name="Bailey Dev",
                 career_level="Senior",
-                team_id=team.id,
+                team_id=teams["DevOPS"].id,
             )
             member_b = models.Member(
                 username="casey.analyst",
                 password_hash=security.hash_password("changeme"),
                 name="Casey Analyst",
                 career_level="Associate",
-                team_id=team.id,
+                team_id=teams["Infra"].id,
             )
             db.add_all([lead, member_a, member_b])
             db.flush()
