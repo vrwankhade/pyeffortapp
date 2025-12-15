@@ -83,6 +83,14 @@ This is the server-side code. Think of it as the "brain" that stores information
 
 - `create_tables.sql` — SQL for creating the original database schema (if you'd like to create the database from scratch manually).
 
+### Teams (OPS / DevOPS / Infra)
+The application seeds three teams by default on first startup: **OPS**, **DevOPS**, and **Infra**. Team Leads can assign members to these teams when creating or editing a member.
+
+How it appears in the UI:
+- Team Leads see a team filter to view members by team, and member entries include the team name next to career level and a subtle color to visually group team members.
+- Non-leads (regular team members) see the global members list showing only name and career level — team assignments are hidden from regular members.
+
+
 ### Frontend folder (`frontend/`)
 This is the web interface people use in the browser. The entire UI is a single HTML file with JavaScript and CSS.
 
