@@ -1437,6 +1437,14 @@ function deleteTask(id) {
         return;
       }
       reportTable.innerHTML = '';
+      
+      if (!rows || rows.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="7" style="text-align:center;padding:20px;color:var(--muted);">No tasks found for the selected criteria</td>`;
+        reportTable.appendChild(tr);
+        return;
+      }
+      
       rows.forEach((r, idx) => {
         const tr = document.createElement('tr');
         const cls = {
@@ -1472,8 +1480,24 @@ function deleteTask(id) {
         
         const params = new URLSearchParams();
         params.set('format', 'json');
-        if (reportStartDate.value) params.set('start_date', reportStartDate.value);
-        if (reportEndDate.value) params.set('end_date', reportEndDate.value);
+        
+        // If no dates are selected, use monthly range (last 30 days)
+        // This prevents showing "0 tasks" when the default weekly range has no tasks
+        let startDate = reportStartDate.value;
+        let endDate = reportEndDate.value;
+        
+        if (!startDate && !endDate) {
+          // Calculate last 30 days if no date range specified
+          const today = new Date();
+          const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+          startDate = thirtyDaysAgo.toISOString().split('T')[0];
+          endDate = today.toISOString().split('T')[0];
+          reportStartDate.value = startDate;
+          reportEndDate.value = endDate;
+        }
+        
+        if (startDate) params.set('start_date', startDate);
+        if (endDate) params.set('end_date', endDate);
         if (reportMemberSelect.value) params.set('member_id', reportMemberSelect.value);
         if (reportStatusSelect.value) params.set('status', reportStatusSelect.value);
 
@@ -1481,8 +1505,8 @@ function deleteTask(id) {
 
         // store last used params so exports from results area can reuse them
         window._lastReportParams = {
-          start_date: reportStartDate.value || null,
-          end_date: reportEndDate.value || null,
+          start_date: startDate || null,
+          end_date: endDate || null,
           member_id: reportMemberSelect ? (reportMemberSelect.value || null) : null,
           status: reportStatusSelect ? (reportStatusSelect.value || null) : null,
         };
@@ -1493,7 +1517,9 @@ function deleteTask(id) {
         console.log('[generateReport] Response data:', data);
         
         if (reportSummary) {
-          reportSummary.innerHTML = `Tasks: <strong>${data.summary.total_tasks}</strong> &nbsp; Hours: <strong>${data.summary.total_hours}</strong> &nbsp; Blockers: <strong>${data.summary.total_blockers}</strong> &nbsp; Past due: <strong>${data.summary.tasks_past_due}</strong>`;
+          const dateRangeText = `(${data.summary.start_date} to ${data.summary.end_date})`;
+          const noDataText = data.summary.total_tasks === 0 ? ' <span style="color:var(--muted);font-size:12px;">No tasks in this range</span>' : '';
+          reportSummary.innerHTML = `Tasks: <strong>${data.summary.total_tasks}</strong> &nbsp; Hours: <strong>${data.summary.total_hours}</strong> &nbsp; Blockers: <strong>${data.summary.total_blockers}</strong> &nbsp; Past due: <strong>${data.summary.tasks_past_due}</strong> &nbsp; <span style="font-size:12px;color:var(--muted);">${dateRangeText}</span>${noDataText}`;
         }
         window._lastReportRows = data.rows; // keep for client-side filtering
         renderReportRows(data.rows);
