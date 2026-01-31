@@ -1150,8 +1150,16 @@ function deleteTask(id) {
     }
 
     function renderMembers() {
+      const selectedTeam = document.getElementById('leadTeamFilter') ? document.getElementById('leadTeamFilter').value : '';
+      let membersToDisplay = members;
+      
+      // Only apply team filter if user is a lead and a team is selected
+      if (currentUser && currentUser.is_lead && selectedTeam) {
+        membersToDisplay = members.filter(m => (m.team_id || '').toString() === selectedTeam.toString());
+      }
+      
       memberListEl.innerHTML = '';
-      members.forEach(m => {
+      membersToDisplay.forEach(m => {
         const li = document.createElement('li');
         // add team color class when user is a lead and team_id present
         const teamClass = (currentUser && currentUser.is_lead && m.team_id) ? ` team-${String(m.team_id)}` : '';
@@ -1164,8 +1172,12 @@ function deleteTask(id) {
         li.onclick = () => selectMember(m.id);
         memberListEl.appendChild(li);
       });
+      
+      // Always show all members in assignment selects (not filtered by team)
       assigneeSelect.innerHTML = members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
       tagSelect.innerHTML = members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+      
+      // Always show all members in report select (not filtered by team)
       const reportMemberSelect = document.getElementById('reportMemberSelect');
       if (reportMemberSelect) {
         reportMemberSelect.innerHTML = '<option value="">-- All members --</option>' + members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
@@ -1177,16 +1189,17 @@ function deleteTask(id) {
       members = await fetchJSON('/api/members');
       // decorate members with team name if available (backend exposes team_name property)
       members = members.map(m => ({...m, team_name: m.team_name || null}));
-      // apply team filter for leads if selected
-      const selectedTeam = document.getElementById('leadTeamFilter') ? document.getElementById('leadTeamFilter').value : '';
-      if (currentUser && currentUser.is_lead && selectedTeam) {
-        members = members.filter(m => (m.team_id || '').toString() === selectedTeam.toString());
-      }
       if (!currentUser && members.length) {
         currentUser = members[0];
       }
       if (!activeMember) {
         activeMember = currentUser && !currentUser.is_lead ? currentUser : (members[0] || null);
+      } else {
+        // if activeMember was already set, update it in case the data changed
+        const updated = members.find(m => m.id === activeMember.id);
+        if (updated) {
+          activeMember = updated;
+        }
       }
       renderMembers();
       updateHeader();
@@ -1414,10 +1427,15 @@ function deleteTask(id) {
     const reportMemberSelect = document.getElementById('reportMemberSelect');
     const reportStatusSelect = document.getElementById('reportStatusSelect');
     const reportSummary = document.getElementById('reportSummary');
-    const reportTable = document.getElementById('reportTable').querySelector('tbody');
+    const reportTableElement = document.getElementById('reportTable');
+    const reportTable = reportTableElement ? reportTableElement.querySelector('tbody') : null;
     const reportResultStatusFilter = document.getElementById('reportResultStatusFilter');
 
     function renderReportRows(rows) {
+      if (!reportTable) {
+        console.error('[renderReportRows] Report table not found');
+        return;
+      }
       reportTable.innerHTML = '';
       rows.forEach((r, idx) => {
         const tr = document.createElement('tr');
@@ -1445,12 +1463,21 @@ function deleteTask(id) {
 
     async function generateReport() {
       try {
+        console.log('[generateReport] Starting report generation');
+        if (!reportStartDate || !reportEndDate || !reportMemberSelect || !reportStatusSelect) {
+          console.error('[generateReport] Missing report elements');
+          alert('Error: Report form elements not found');
+          return;
+        }
+        
         const params = new URLSearchParams();
         params.set('format', 'json');
         if (reportStartDate.value) params.set('start_date', reportStartDate.value);
         if (reportEndDate.value) params.set('end_date', reportEndDate.value);
         if (reportMemberSelect.value) params.set('member_id', reportMemberSelect.value);
         if (reportStatusSelect.value) params.set('status', reportStatusSelect.value);
+
+        console.log('[generateReport] Query params:', params.toString());
 
         // store last used params so exports from results area can reuse them
         window._lastReportParams = {
@@ -1460,16 +1487,28 @@ function deleteTask(id) {
           status: reportStatusSelect ? (reportStatusSelect.value || null) : null,
         };
 
-        const data = await fetchJSON(`/api/reports?${params.toString()}`);
-        reportSummary.innerHTML = `Tasks: <strong>${data.summary.total_tasks}</strong> &nbsp; Hours: <strong>${data.summary.total_hours}</strong> &nbsp; Blockers: <strong>${data.summary.total_blockers}</strong> &nbsp; Past due: <strong>${data.summary.tasks_past_due}</strong>`;
+        const url = `/api/reports?${params.toString()}`;
+        console.log('[generateReport] Fetching from:', url);
+        const data = await fetchJSON(url);
+        console.log('[generateReport] Response data:', data);
+        
+        if (reportSummary) {
+          reportSummary.innerHTML = `Tasks: <strong>${data.summary.total_tasks}</strong> &nbsp; Hours: <strong>${data.summary.total_hours}</strong> &nbsp; Blockers: <strong>${data.summary.total_blockers}</strong> &nbsp; Past due: <strong>${data.summary.tasks_past_due}</strong>`;
+        }
         window._lastReportRows = data.rows; // keep for client-side filtering
         renderReportRows(data.rows);
       } catch (err) {
+        console.error('[generateReport] Error:', err);
         alert('Error generating report: ' + err.message);
       }
     }
 
     generateReportBtn && (generateReportBtn.onclick = generateReport);
+    if (!generateReportBtn) {
+      console.warn('[Init] generateReportBtn not found');
+    } else {
+      console.log('[Init] generateReportBtn found and handler attached');
+    }
     const exportExcelBtn = document.getElementById('exportExcelBtn');
     if (exportExcelBtn) {
       exportExcelBtn.onclick = async () => {
