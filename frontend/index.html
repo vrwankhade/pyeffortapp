@@ -1177,11 +1177,8 @@ function deleteTask(id) {
       assigneeSelect.innerHTML = members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
       tagSelect.innerHTML = members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
       
-      // Always show all members in report select (not filtered by team)
-      const reportMemberSelect = document.getElementById('reportMemberSelect');
-      if (reportMemberSelect) {
-        reportMemberSelect.innerHTML = '<option value="">-- All members --</option>' + members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
-      }
+      // Update report member select - filtered by selected team if any
+      updateReportMemberSelect();
     }
 
     async function loadMembers() {
@@ -1204,6 +1201,7 @@ function deleteTask(id) {
       renderMembers();
       updateHeader();
       toggleLeadPanel();
+      updateReportMemberSelect();
       loadTasks();
     }
 
@@ -1235,7 +1233,29 @@ function deleteTask(id) {
       if (newTeamSelect) newTeamSelect.innerHTML = '<option value="">-- Select team --</option>' + teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
       if (editTeamSelect) editTeamSelect.innerHTML = makeOptions(teams, true);
       if (leadTeamFilter) leadTeamFilter.innerHTML = '<option value="">-- All teams --</option>' + teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-      if (leadTeamFilter) leadTeamFilter.onchange = () => loadMembers();
+      if (leadTeamFilter) {
+        leadTeamFilter.onchange = () => {
+          loadMembers();
+          updateReportMemberSelect();
+        };
+      }
+    }
+    
+    function updateReportMemberSelect() {
+      const leadTeamFilter = document.getElementById('leadTeamFilter');
+      const reportMemberSelect = document.getElementById('reportMemberSelect');
+      if (!reportMemberSelect) return;
+      
+      const selectedTeamId = leadTeamFilter ? leadTeamFilter.value : '';
+      let filteredMembers = members;
+      
+      // If a team is selected, filter members to that team
+      if (selectedTeamId) {
+        filteredMembers = members.filter(m => (m.team_id || '').toString() === selectedTeamId.toString());
+      }
+      
+      reportMemberSelect.innerHTML = '<option value="">-- All members --</option>' + 
+        filteredMembers.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
     }
 
     function toggleLeadPanel() {
