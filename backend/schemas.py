@@ -12,6 +12,14 @@ class TeamCreate(TeamBase):
     pass
 
 
+class Team(TeamBase):
+    id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
 class MemberBase(BaseModel):
     username: str
     name: str

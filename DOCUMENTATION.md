@@ -110,6 +110,76 @@ This is the web interface people use in the browser. The entire UI is a single H
 
 ---
 
+## Getting the code onto a different machine
+
+If you want to use the application on another computer (for example, a Windows
+laptop) you can’t simply copy the folder over; instead push the repository to
+a remote and pull it down from there. The following outline assumes the code is
+stored in a Git repository accessible from your laptop (GitHub, GitLab, a
+private server, etc.).
+
+1. **Create a remote repository and push**
+   - On GitHub (or your preferred host) create a new repository and mark it **public**. You can use the web UI:
+     1. Log in to https://github.com.
+     2. Click **+ → New repository**.
+     3. Give it a name (e.g. `pyeffortapp`), choose **Public**, and click **Create repository**.
+   - Back on your Linux machine run:
+     ```bash
+     cd /home/sam/effortapp/pyeffortapp
+     git init                    # if not yet a repo
+     git add .
+     git commit -m "initial commit"
+     git remote add origin git@github.com:yourusername/pyeffortapp.git
+     git push -u origin main     # or master if that's your main branch
+     ```
+   - If you prefer HTTPS you can use `https://github.com/yourusername/pyeffortapp.git` instead of the SSH URL.
+
+2. **On the Windows laptop:**
+   - If you have Git installed, use the instructions below. Otherwise you can
+     simply download a zip file of the repository from the public host (e.g.
+     GitHub’s **Code → Download ZIP** button) and extract it into a folder
+     named `pyeffortapp`.
+   - If you do use Git, install Git for Windows from https://git-scm.com/download/win
+     and run:
+     ```bash
+     git clone <your-remote-url> pyeffortapp
+     cd pyeffortapp
+     ```
+   - After obtaining the files (by cloning or by unzipping), continue with the
+     setup steps below. Using WSL or Git Bash is recommended but not required.
+
+3. **Set up Python and dependencies on Windows:**
+   - Ensure you have Python 3.10+ installed (from https://www.python.org).
+   - Create a virtual environment:
+     ```bash
+     python -m venv .venv
+     .\.venv\Scripts\activate     # PowerShell: .\.venv\Scripts\Activate.ps1
+     ```
+   - Install requirements:
+     ```bash
+     pip install -r requirements.txt
+     ```
+
+4. **Run the app:**
+   ```bash
+   set DATABASE_URL=sqlite:///./effort.db  # PowerShell: $env:DATABASE_URL = 'sqlite:///./effort.db'
+   uvicorn backend.main:app --reload
+   ```
+   (the default is already SQLite, so setting `DATABASE_URL` is optional.)
+
+5. Open a browser to `http://127.0.0.1:8000/` and the app will start with the
+   same seeded data as on your original machine.
+
+### Notes for Windows users
+- Using **Windows Subsystem for Linux (WSL)** often gives a more familiar
+  Unix-like environment and avoids path‑style headaches; the commands above
+  can be run verbatim in WSL.
+- If you clone into a folder with spaces or unusual characters, adjust the
+  paths accordingly when activating the virtual environment and starting
+  Uvicorn.
+- You don’t need Oracle or any database server; the app uses SQLite by default.
+
+
 ## How to run the project (developer steps made plain)
 These steps are what a developer or a slightly technical person would follow to run this on their machine. I will keep the commands and settings simple and safe.
 
@@ -121,21 +191,20 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-2. Set up database connection using environment variables (this project expects Oracle by default). Either set:
+2. Configure the database. By default the code uses SQLite and will create a
+   file called `effort.db` in the current directory. You can override this by
+   setting a `DATABASE_URL` environment variable to any SQLAlchemy‑compatible
+   URL (e.g. `postgresql://user:pass@host/dbname`). Example for a custom
+   SQLite location:
 
-- `DATABASE_URL` (a full connection URL), OR
-- set `ORACLE_USER`, `ORACLE_PASSWORD`, and `ORACLE_DSN` and modify `db.py` to call `build_oracle_url()` if you prefer the helper.
-
-3. Create database schema or run migrations:
-
-- If you have a fresh Oracle (or supported DB), run the `create_tables.sql` contents in your DB to create the tables.
-- If you need the `is_locked` field (the code expects it), run the SQL in `backend/migrations/001_add_is_locked.sql` on your database:
-
-```sql
-ALTER TABLE members ADD (is_locked NUMBER(1) DEFAULT 0);
-UPDATE members SET is_locked = 0 WHERE is_locked IS NULL;
-ALTER TABLE members MODIFY (is_locked DEFAULT 0 NOT NULL);
+```bash
+export DATABASE_URL="sqlite:////path/to/your/effort.sqlite"
 ```
+
+3. (Optional) apply migrations. For SQLite the startup code will automatically
+   create any missing tables when you run the server, but you can also apply
+   the SQL scripts in `backend/migrations/` manually if you prefer. The
+   `create_tables.sql` file now contains SQLite‑compatible DDL.
 
 4. Start the server (development):
 
@@ -143,7 +212,8 @@ ALTER TABLE members MODIFY (is_locked DEFAULT 0 NOT NULL);
 uvicorn backend.main:app --reload
 ```
 
-5. Open your browser to `http://127.0.0.1:8000/` and you should see the web UI. The server seeds a sample team and users if the database is empty.
+5. Open your browser to `http://127.0.0.1:8000/` and you should see the web UI.
+   The server seeds a sample team and users if the database is empty.
 
 ---
 

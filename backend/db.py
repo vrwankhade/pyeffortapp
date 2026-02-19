@@ -7,30 +7,14 @@ load_dotenv()
 
 Base = declarative_base()
 
-
-def build_oracle_url() -> str:
-    """
-    Construct an Oracle SQLAlchemy URL from environment variables.
-    Expected:
-    - ORACLE_USER
-    - ORACLE_PASSWORD
-    - ORACLE_DSN (e.g. "host:1521/ORCLCDB" or EZConnect string)
-    """
-    user = os.getenv("ORACLE_USER", "appuser")
-    password = os.getenv("ORACLE_PASSWORD", "app_password")
-    dsn = os.getenv("ORACLE_DSN", "localhost:1521/FREEXDB")
-    return f"oracle+cx_oracle://{user}:{password}@{dsn}"
-
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "oracle+cx_oracle://appuser:app_password@localhost:1521/?service_name=freepdb1",
-)
-
-##DATABASE_URL = os.getenv("DATABASE_URL", build_oracle_url())
+# default to a local SQLite database file in the project root
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./effort.db")
+# if you prefer another location you can set DATABASE_URL to any SQLAlchemy
+# compatible URL (e.g. "postgresql://user:pass@host/dbname").
 
 engine = create_engine(
     DATABASE_URL,
-    pool_pre_ping=True,
+    connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {},
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

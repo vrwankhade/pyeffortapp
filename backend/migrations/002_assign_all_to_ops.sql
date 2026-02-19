@@ -1,10 +1,9 @@
--- Migration: assign all members to OPS team
+-- Migration: assign all members to OPS team (SQLite version)
 -- Up
-MERGE INTO members m
-USING (SELECT id FROM teams WHERE name = 'OPS') t
-ON (1=1)
-WHEN MATCHED THEN
-  UPDATE SET m.team_id = t.id
-WHERE t.id IS NOT NULL;
+UPDATE members
+SET team_id = (
+    SELECT id FROM teams WHERE name = 'OPS' LIMIT 1
+)
+WHERE EXISTS (SELECT 1 FROM teams WHERE name = 'OPS');
 
 -- Down: no-op (reverting requires knowing previous assignments)

@@ -1,9 +1,10 @@
--- Migration: Add is_locked column to members
+-- Migration: Add is_locked column to members (SQLite version)
 -- Up
-ALTER TABLE members ADD (is_locked NUMBER(1) DEFAULT 0);
-UPDATE members SET is_locked = 0 WHERE is_locked IS NULL;
-ALTER TABLE members MODIFY (is_locked DEFAULT 0 NOT NULL);
+ALTER TABLE members ADD COLUMN is_locked INTEGER DEFAULT 0 NOT NULL;
+-- SQLite adds the column with the default; existing rows will have 0.
+-- No further modification needed.
 
 -- Down (rollback)
--- Note: dropping a column will remove data; use with caution
--- ALTER TABLE members DROP COLUMN is_locked;
+-- SQLite does not support DROP COLUMN directly; you would need to
+-- rebuild the table without it if you truly want to remove it.
+

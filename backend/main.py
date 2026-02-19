@@ -288,8 +288,9 @@ def create_user(
     return member
 
 
-@app.get("/api/teams", response_model=List[schemas.TeamCreate])
+@app.get("/api/teams", response_model=List[schemas.Team])
 def list_teams(db: Session = Depends(get_db)):
+    # return teams including their IDs so the frontend can build selects
     return db.query(models.Team).all()
 
 
